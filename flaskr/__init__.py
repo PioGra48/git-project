@@ -82,11 +82,10 @@ def create_app():
             dict: JSON-formatted dictionary containing found repositories' info
         """
         
-        #  Get raw query string for keyword testing
-        raw_query = request.query_string.decode()
-        
         #  Extract keyword from raw query
-        raw_keyword = raw_query[: raw_query.find('?')]
+        #  Keyword is found after last '/' and before '?'
+        raw_url = request.url
+        raw_keyword = raw_url[raw_url.rfind('/') + 1: raw_url.find('?')]
         
         #  Check if keyword was cut early by reserved character
         #  If cut, raise exception
