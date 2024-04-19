@@ -19,7 +19,7 @@ def get_json(url: str) -> dict:
     content = page.read()
     
     return json.loads(content)
-
+    
 
 def create_app():
     app = Flask(__name__, instance_relative_config=True)
@@ -31,17 +31,24 @@ def create_app():
         os.makedirs(app.instance_path)
     except OSError:
         pass
-    
-    @app.route('/<owner>/<repo>')
-    def getRepo(owner, repo):
-        url = f'http://api.github.com/repos/{owner}/{repo}'
+
+    @app.route('/search/<keyword>')
+    def findByKeyword(keyword):
+        url = f'https://api.github.com/search/repositories?q={keyword}'
         contents_json = get_json(url)
         
-        info_json = {}
-        info_json["repo_name"] = contents_json["name"]
-        info_json["owner_login"] = contents_json["owner"]["login"]
-        info_json["repo_url"] = contents_json["html_url"]
-        
+        info_json = {
+            "items": {}
+        }
+        for i, item in enumerate(contents_json["items"]):
+            item_info_dict = {}
+            
+            item_info_dict["repo_name"] = item["name"]
+            item_info_dict["owner_login"] = item["owner"]["login"]
+            item_info_dict["repo_url"] = item["html_url"]
+            
+            info_json["items"][f"{i}"] = item_info_dict
+            
         return info_json
     
     return app
