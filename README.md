@@ -30,15 +30,16 @@ In case port 5000 is already in use, run
 flask --app flaskr run --debug --port <port>
 ``` 
 
-# Use
-## Request format
-The service consists of one GET endpoint on `/search/<keyword>`.
+# Endpoints
+## GET /search/<keyword>
+### Request format
 Replace `<keyword>` in endpoint URL with any keyword to search Git Hub for any related repositories.
+If provided username and token, can access private repostitories as authorized by the provided token.
 Additionally, you can `per_page` and `page` URL parameters after keyword:
 `per_page` - specifies the number of shown repository data entries. Default: 30. Type: Integer.
 `page` - chooses the page number of shown entries. Default: 1. Type: Integer.
 
-## Response format
+### Response format
 The endpoint returns JSON object with data from found repositories.
 The JSON is formatted as such:
 ```
@@ -53,3 +54,26 @@ The JSON is formatted as such:
 }
 ```
 In case the search found no results, empty JSON is returned.
+
+## POST /login
+### Request format
+Takes JSON request body to save username and GitHub personal access token to session.
+```
+{
+    "username": "<username>",
+    "token": "<token>"
+}
+```
+### Response format
+Responds with Http 200: Ok with user provided username in case of success.
+In case user is already logged in returns Http 403: Forbidden.
+
+## GET /user
+### Response format
+Returns username provided during login by the user.
+If not logged in, informs about it.
+
+## /logout
+### Response format
+Deletes username and token from session.
+Returns Http 200: OK.

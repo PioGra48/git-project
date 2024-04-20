@@ -1,7 +1,10 @@
 import json
 import urllib.request as rq
  
-from flask import Flask, request
+import flask
+
+from typing import Dict 
+from flask import Flask, Response, request, session
 from werkzeug.exceptions import HTTPException
 
 
@@ -9,36 +12,37 @@ from werkzeug.exceptions import HTTPException
 RESERVED = ('!', '#', '$', '&', "'", '(', ')', '*', '+', ',', '/', ':', ';', '=', '?', '@', '[', ']')
 
 
-def get_json(url: str) -> dict:
+def get_json(url: str, headers: Dict[str, str] = None) -> dict:
     """Reads url contents and returns them as JSON
 
     Args:
-        url (str): URL path 
+        url (str): URL path
+        headers (Dict[str]): Dictionary of headers and their values to be added to request. Defaults to None.
 
     Returns:
         dict: JSON-format dictionary
     """
     
-    request_url = rq.urlopen(url)
+    req = rq.Request(url, headers=headers, method='GET')
     
-    response = request_url.read()
+    content = rq.urlopen(req).read()
     
     #  convert page content from string to JSON
-    return json.loads(response)
+    return json.loads(content)
     
 
 class InvalidUserInputException(Exception):
     """Exception raised in cases of invalid user input
     """
     
-    def __init__(self, message, payload=None):
+    def __init__(self, message, statuscode=400, payload=None):
         """Initializes the exception
-        Initializes the exception with custom message, HTTP Status 400: Bad Request due to user error
+        Initializes the exception with custom message and status code defaulting to HTTP Status 400: Bad Request due to user error
         """
         
         super().__init__()
         self.message = message
-        self.status_code = 400
+        self.status_code = statuscode
         self.payload = payload
     
     def to_dict(self):
@@ -49,7 +53,11 @@ class InvalidUserInputException(Exception):
         ed = dict(self.payload or ())
         
         ed["status_code"] = self.status_code
-        ed["name"] = "Bad request"
+        match self.status_code:
+            case 400:
+                ed["name"] = "Bad request"
+            case 403:
+                ed["name"] = "Forbidden"
         ed["message"] = self.message
         
         return ed
@@ -61,8 +69,55 @@ def create_app():
     """
     
     app = Flask(__name__)
+    app.config.from_mapping(
+        #  Secret key used to protect data
+        #  MUST BE OVERRIDDEN WITH RANDOM ONE FOR DEPLOYMENT
+        SECRET_KEY='dev'
+    )
 
-    @app.route('/search/<keyword>')
+    @app.route('/login', methods=["POST"])
+    def login():
+        """Logging in endpoint
+        Endpoint used in logging in. Uses request body to get username and GitHub personal access token provided by the user.
+
+        Raises:
+            InvalidUserInputException: In case user is already logged in, return Http 403: Forbidden
+        """
+        
+        #  Proceed if no user logged in
+        #  Otherwise, return Http 403: Forbidden
+        if "username" not in session:
+            #  Save user info to session and return Http 200: OK
+            login_info = request.get_json()
+            session["username"] = login_info["username"]
+            session["token"] = login_info["token"]
+            return Response(response=json.dumps({"username": login_info["username"]}), status=200, mimetype='application/json')
+        else:
+            raise InvalidUserInputException('User already logged in.', statuscode=403)
+    
+    @app.route('/user', methods=["GET"])
+    def get_user():
+        """User endpoint
+        Returns username provided during login.
+        """
+        if "username" in session:
+            return {
+                "username": session["username"]
+            }
+        else:
+            return 'No user logged in.'
+    
+    @app.route('/logout')
+    def logout():
+        """Logout endpoint
+        Deletes user info from session.
+        """
+        session.pop("username", None)
+        session.pop("token", None)
+    
+        return Response({}, status=200)
+
+    @app.route('/search/<keyword>', methods=["GET"])
     def findByKeyword(keyword: str) -> dict:
         """ Keyword based repository search
         Uses user specified keyword to search GitHub repositories and returns their name, URL and their owner's login.
@@ -129,9 +184,18 @@ def create_app():
         page_number = page_arg
         
         #  URL connecting to GitHub API repositories search endpoint
-        #  URL formatted according to user input
+        #  URL values formatted according to user input
         url = f'https://api.github.com/search/repositories?q={keyword}&page={page_number}&per_page={items_per_page}'
-        response = get_json(url)
+        
+        #  If logged in, authorize search with provided token
+        #  Otherwise, retrieve data with no authorization
+        if "username" in session:
+            response = get_json(url, {
+                "Authorization": f'token {session["token"]}',
+                "Accept": "application/vnd.github+json"
+            })
+        else: 
+            response = get_json(url, {"Accept": "application/vnd.github+json"})
         
         #  Create new JSON-formatted dictionary storing the repository data
         repos_data = {
