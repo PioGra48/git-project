@@ -1,7 +1,17 @@
 # Requirements
+Create new Python virtual environment
+```
+python3 -m venv <env_name>
+```
+
+Start the virtual environment with
+```
+source <env_name>/bin/activate
+```
+
 Install required libraries
 ```
-python3 -m pip install requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
 # Running

@@ -82,10 +82,13 @@ def create_app():
         """
         
         #  Extract keyword from raw query
-        #  Keyword is found after last '/' and before '?'
+        #  Keyword is found after last '/' and before '?' if it exists
         raw_url = request.url
-        raw_keyword = raw_url[raw_url.rfind('/') + 1: raw_url.find('?')]
-        
+        raw_api_url = raw_url[raw_url.rfind('/') + 1:]
+        raw_keyword = keyword
+        if '?' in raw_api_url:
+            raw_keyword = raw_api_url[: raw_api_url.find('?')]
+
         #  Check if keyword was cut early by reserved character
         #  If cut, raise exception
         #  In some cases, reserved character can cut keyword early, but not show up in keyword
