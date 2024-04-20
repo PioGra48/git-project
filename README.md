@@ -5,8 +5,14 @@ python3 -m venv <env_name>
 ```
 
 Start the virtual environment with
+## Linux/MacOS
 ```
 source <env_name>/bin/activate
+```
+## Windows
+```
+source <env_name>/Source/activate.bat  // For CMD
+source <env_name>/Source/activate.ps1  // For Powershell
 ```
 
 Install required libraries
