@@ -11,12 +11,12 @@ bp = Blueprint('search', __name__, url_prefix='/search')
 RESERVED = ('!', '#', '$', '&', "'", '(', ')', '*', '+', ',', '/', ':', ';', '=', '?', '@', '[', ']')    
 
 
-def get_json(url: str, headers: Dict[str, str] = None) -> dict:
+def get_json(url: str, headers: Dict[str, str] = {}) -> dict:
     """Reads url contents and returns them as JSON
 
     Args:
         url (str): URL path
-        headers (Dict[str]): Dictionary of headers and their values to be added to request. Defaults to None.
+        headers (Dict[str]): Dictionary of headers and their values to be added to request. Defaults to empty dict.
 
     Returns:
         dict: JSON-format dictionary
@@ -111,6 +111,7 @@ def findByKeyword(keyword: str) -> dict:
     
     #  Create new JSON-formatted dictionary storing the repository data
     repos_data = {
+        "total": response["total_count"],
         "items": {}
     }
     

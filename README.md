@@ -30,6 +30,13 @@ In case port 5000 is already in use, run
 flask --app flaskr run --debug --port <port>
 ``` 
 
+# Testing
+To run tests, run
+```
+cd tests
+pytest
+```
+
 # Endpoints
 ## GET /search/<keyword>
 ### Request format

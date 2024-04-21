@@ -1,4 +1,4 @@
-from flask import Flask, json
+from flask import Flask, Response, json
 from werkzeug.exceptions import HTTPException
 from .exceptions import InvalidUserInputException
 
@@ -21,11 +21,11 @@ def create_app():
     app.register_blueprint(search.bp)
     
     @app.errorhandler(InvalidUserInputException)
-    def handle_invalid_keyword(e):
-        """Invalid keyword exception handler
+    def handle_invalid_user_input(e):
+        """Invalid user input exception handler
         """
-        
-        return e.to_dict()
+        ed = e.to_dict()
+        return Response(response=json.dumps({"message": ed["message"]}), status=ed["status_code"], mimetype='application/json')
 
     @app.errorhandler(HTTPException)
     def handle_generic_errors(e):

@@ -20,11 +20,6 @@ class InvalidUserInputException(Exception):
         ed = dict(self.payload or ())
         
         ed["status_code"] = self.status_code
-        match self.status_code:
-            case 400:
-                ed["name"] = "Bad request"
-            case 403:
-                ed["name"] = "Forbidden"
         ed["message"] = self.message
         
         return ed

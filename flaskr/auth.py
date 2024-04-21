@@ -17,11 +17,16 @@ def login():
     #  Proceed if no user logged in
     #  Otherwise, return Http 403: Forbidden
     if "username" not in session:
-        #  Save user info to session and return Http 200: OK
         login_info = request.get_json()
+        
+        #  Check if necessery info was provided
+        if "username" not in login_info or "token" not in login_info:
+            raise InvalidUserInputException('Information missing.', statuscode=403)
+        
+        #  Save user info to session and return Http 200: OK
         session["username"] = login_info["username"]
         session["token"] = login_info["token"]
-        return Response(response=json.dumps({"username": login_info["username"]}), status=200, mimetype='application/json')
+        return Response(response=json.dumps({"username": login_info["username"]}), status=200, mimetype='application/json', headers={"Location": '/auth/user'})
     else:
         raise InvalidUserInputException('User already logged in.', statuscode=403)
 
@@ -35,7 +40,9 @@ def get_user():
             "username": session["username"]
         }
     else:
-        return 'No user logged in.'
+        return {
+            "username": None
+        }
 
 @bp.route('/logout')
 def logout():
