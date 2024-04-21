@@ -55,7 +55,7 @@ The JSON is formatted as such:
 ```
 In case the search found no results, empty JSON is returned.
 
-## POST /login
+## POST /auth/login
 ### Request format
 Takes JSON request body to save username and GitHub personal access token to session.
 ```
@@ -68,12 +68,12 @@ Takes JSON request body to save username and GitHub personal access token to ses
 Responds with Http 200: Ok with user provided username in case of success.
 In case user is already logged in returns Http 403: Forbidden.
 
-## GET /user
+## GET /auth/user
 ### Response format
 Returns username provided during login by the user.
 If not logged in, informs about it.
 
-## /logout
+## /auth/logout
 ### Response format
 Deletes username and token from session.
 Returns Http 200: OK.
